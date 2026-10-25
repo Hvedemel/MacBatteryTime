@@ -1,0 +1,51 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+/* Begin PBXBuildFile section */
+		16405183CF393DBBC41AEF48 = {isa = PBXBuildFile; fileRef = 8AB7F700EA2083E72A21C950; };
+		FC28A640E2F66F67FCE2E39E = {isa = PBXBuildFile; fileRef = 80428E10CB4E650EF93CE64D; };
+		F0E39DE166B4A83B200F5635 = {isa = PBXBuildFile; fileRef = 46F0258AE6E04137B74AF060; };
+		56BDA2B51029ED8ADEE2C279 = {isa = PBXBuildFile; fileRef = 8220F98569E40812740464CD; };
+		2D7A0660E8684B3EB5263AD4 = {isa = PBXBuildFile; fileRef = B24596615EFE98E4257F0A05; };
+		D664997CF55010B4F8F1EFA2 = {isa = PBXBuildFile; fileRef = 479323B3CFACE4514A3FD049; };
+		08AC6FE0B2752D94BDCAAEF5 = {isa = PBXBuildFile; fileRef = F4FD5668BE01DD6DEC35858A; };
+		0E47A36C6CEEB8FC9FE72710 = {isa = PBXBuildFile; fileRef = 13A49C48DAC314D3973B85D5; };
+		E7F9B84A97C213A2F5A7A31B = {isa = PBXBuildFile; fileRef = BC248D115FE94FBB7CDAB3E2; };
+		973619CCF37A4422E14743E5 = {isa = PBXBuildFile; fileRef = 7BFD980155258EBF84AAD356; };
+		CDFFCADFB367FD8BCCE1EF7B = {isa = PBXBuildFile; fileRef = 445AFB9A10CBBAE48539A39F; };
+/* End PBXBuildFile section */
+/* Begin PBXFileReference section */
+		8AB7F700EA2083E72A21C950 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryCore/BatteryTypes.swift"; sourceTree = "<group>"; };
+		80428E10CB4E650EF93CE64D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryCore/DischargeEstimator.swift"; sourceTree = "<group>"; };
+		46F0258AE6E04137B74AF060 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryCore/HistoryStore.swift"; sourceTree = "<group>"; };
+		8220F98569E40812740464CD = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryTime/BatteryMonitor.swift"; sourceTree = "<group>"; };
+		B24596615EFE98E4257F0A05 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryTime/BatteryReader.swift"; sourceTree = "<group>"; };
+		479323B3CFACE4514A3FD049 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryTime/BatteryTimeMain.swift"; sourceTree = "<group>"; };
+		F4FD5668BE01DD6DEC35858A = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryTime/DashboardView.swift"; sourceTree = "<group>"; };
+		13A49C48DAC314D3973B85D5 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryTime/Design.swift"; sourceTree = "<group>"; };
+		BC248D115FE94FBB7CDAB3E2 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryTime/PopoverView.swift"; sourceTree = "<group>"; };
+		7BFD980155258EBF84AAD356 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/BatteryTime/SettingsView.swift"; sourceTree = "<group>"; };
+		445AFB9A10CBBAE48539A39F = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "Resources/AppIcon.icns"; sourceTree = "<group>"; };
+		254BFC078464EB1D3425C373 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Resources/Info.plist"; sourceTree = "<group>"; };
+		B335630551682C19A781AFEB = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "README.md"; sourceTree = "<group>"; };
+		A8792157CB4F27FB949C035F = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BatteryTime.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+		AD936FCBED631FA67E05C3EA = {isa = PBXGroup; children = (8AB7F700EA2083E72A21C950, 80428E10CB4E650EF93CE64D, 46F0258AE6E04137B74AF060, 8220F98569E40812740464CD, B24596615EFE98E4257F0A05, 479323B3CFACE4514A3FD049, F4FD5668BE01DD6DEC35858A, 13A49C48DAC314D3973B85D5, BC248D115FE94FBB7CDAB3E2, 7BFD980155258EBF84AAD356, 445AFB9A10CBBAE48539A39F, 254BFC078464EB1D3425C373, B335630551682C19A781AFEB, 0A3E27B8CA818264D75C8D81); sourceTree = "<group>"; };
+		0A3E27B8CA818264D75C8D81 = {isa = PBXGroup; children = (A8792157CB4F27FB949C035F); name = Products; sourceTree = "<group>"; };
+		878A52FC5FF6A57D50B7B870 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (16405183CF393DBBC41AEF48, FC28A640E2F66F67FCE2E39E, F0E39DE166B4A83B200F5635, 56BDA2B51029ED8ADEE2C279, 2D7A0660E8684B3EB5263AD4, D664997CF55010B4F8F1EFA2, 08AC6FE0B2752D94BDCAAEF5, 0E47A36C6CEEB8FC9FE72710, E7F9B84A97C213A2F5A7A31B, 973619CCF37A4422E14743E5); runOnlyForDeploymentPostprocessing = 0; };
+		41D311A605520FC7B8B9A980 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (CDFFCADFB367FD8BCCE1EF7B); runOnlyForDeploymentPostprocessing = 0; };
+		E2AA269EB967A8853A258BFA = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		34A04005BCAF206EEC990BD9 = {isa = PBXNativeTarget; buildConfigurationList = A1C421DAD96DFF096646A753; buildPhases = (878A52FC5FF6A57D50B7B870, E2AA269EB967A8853A258BFA, 41D311A605520FC7B8B9A980); buildRules = (); dependencies = (); name = BatteryTime; productName = BatteryTime; productReference = A8792157CB4F27FB949C035F; productType = "com.apple.product-type.application"; };
+		244210E48437B6556980A702 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = YES; LastSwiftUpdateCheck = 1600; LastUpgradeCheck = 1600; TargetAttributes = {34A04005BCAF206EEC990BD9 = {CreatedOnToolsVersion = 16.0; }; }; }; buildConfigurationList = A964DD4136F390AFDF0E5FBA; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = AD936FCBED631FA67E05C3EA; productRefGroup = 0A3E27B8CA818264D75C8D81; projectDirPath = ""; projectRoot = ""; targets = (34A04005BCAF206EEC990BD9); };
+		73EBF6644258C120893E685D = {isa = XCBuildConfiguration; buildSettings = {MACOSX_DEPLOYMENT_TARGET = "13.0"; SDKROOT = "macosx"; SWIFT_VERSION = "6.0"; SWIFT_STRICT_CONCURRENCY = "complete"; SWIFT_TREAT_WARNINGS_AS_ERRORS = "YES"; CLANG_ENABLE_MODULES = "YES";}; name = Debug; };
+		0B0C687DF8B6B8DC790B519C = {isa = XCBuildConfiguration; buildSettings = {MACOSX_DEPLOYMENT_TARGET = "13.0"; SDKROOT = "macosx"; SWIFT_VERSION = "6.0"; SWIFT_STRICT_CONCURRENCY = "complete"; SWIFT_TREAT_WARNINGS_AS_ERRORS = "YES"; CLANG_ENABLE_MODULES = "YES";}; name = Release; };
+		A964DD4136F390AFDF0E5FBA = {isa = XCConfigurationList; buildConfigurations = (73EBF6644258C120893E685D, 0B0C687DF8B6B8DC790B519C); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		6C7EFF6369083C8E1F2B1994 = {isa = XCBuildConfiguration; buildSettings = {MACOSX_DEPLOYMENT_TARGET = "13.0"; SDKROOT = "macosx"; SWIFT_VERSION = "6.0"; SWIFT_STRICT_CONCURRENCY = "complete"; SWIFT_TREAT_WARNINGS_AS_ERRORS = "YES"; CLANG_ENABLE_MODULES = "YES"; PRODUCT_BUNDLE_IDENTIFIER = "dk.batterytime.menubar"; PRODUCT_NAME = "BatteryTime"; INFOPLIST_FILE = "Resources/Info.plist"; GENERATE_INFOPLIST_FILE = "NO"; CODE_SIGN_STYLE = "Manual"; CODE_SIGN_IDENTITY = "-"; ENABLE_HARDENED_RUNTIME = "YES"; COMBINE_HIDPI_IMAGES = "YES"; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks"; ARCHS = "$(ARCHS_STANDARD)"; ONLY_ACTIVE_ARCH = "YES"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; ENABLE_TESTABILITY = "YES";}; name = Debug; };
+		DD75E2CB1C510A828AC72D96 = {isa = XCBuildConfiguration; buildSettings = {MACOSX_DEPLOYMENT_TARGET = "13.0"; SDKROOT = "macosx"; SWIFT_VERSION = "6.0"; SWIFT_STRICT_CONCURRENCY = "complete"; SWIFT_TREAT_WARNINGS_AS_ERRORS = "YES"; CLANG_ENABLE_MODULES = "YES"; PRODUCT_BUNDLE_IDENTIFIER = "dk.batterytime.menubar"; PRODUCT_NAME = "BatteryTime"; INFOPLIST_FILE = "Resources/Info.plist"; GENERATE_INFOPLIST_FILE = "NO"; CODE_SIGN_STYLE = "Manual"; CODE_SIGN_IDENTITY = "-"; ENABLE_HARDENED_RUNTIME = "YES"; COMBINE_HIDPI_IMAGES = "YES"; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks"; ARCHS = "$(ARCHS_STANDARD)"; ONLY_ACTIVE_ARCH = "NO"; SWIFT_OPTIMIZATION_LEVEL = "-O"; ENABLE_TESTABILITY = "NO";}; name = Release; };
+		A1C421DAD96DFF096646A753 = {isa = XCConfigurationList; buildConfigurations = (6C7EFF6369083C8E1F2B1994, DD75E2CB1C510A828AC72D96); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+	};
+	rootObject = 244210E48437B6556980A702;
+}

@@ -1,0 +1,12 @@
+{
+  "availability" : "available",
+  "message" : "Live IOKit reading",
+  "reading" : {
+    "cycles" : 494,
+    "date" : "2026-10-25T23:05:50Z",
+    "identity" : "4294969361",
+    "level" : 93,
+    "lowPowerMode" : false,
+    "power" : "charging"
+  }
+}

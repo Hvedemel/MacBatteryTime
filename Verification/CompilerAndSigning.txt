@@ -1,0 +1,6 @@
+ld: warning: ignoring file '/Library/Developer/CommandLineTools/usr/lib/swift/macosx/libswiftCompatibilityPacks.a': fat file missing arch 'x86_64', file has 'arm64,arm64e'
+ld: warning: ignoring file '/Library/Developer/CommandLineTools/usr/lib/swift/macosx/libswiftCompatibilityPacks.a': fat file missing arch 'x86_64', file has 'arm64,arm64e'
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/outputs/.batterytime-build.4zi7HS/BatteryTime.app/Contents/Info.plist: OK
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/outputs/.batterytime-build.4zi7HS/BatteryTime.app: replacing existing signature
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/outputs/.batterytime-build.4zi7HS/BatteryTime.app: valid on disk
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/outputs/.batterytime-build.4zi7HS/BatteryTime.app: satisfies its Designated Requirement

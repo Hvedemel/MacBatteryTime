@@ -1,0 +1,20 @@
+[
+  {
+    "dateUTC": "2026-10-25T22:55:27.241110+00:00",
+    "power": "battery",
+    "level": 95,
+    "estimateSeconds": 23640
+  },
+  {
+    "dateUTC": "2026-10-25T23:01:18.324515+00:00",
+    "power": "pluggedIn",
+    "level": 93,
+    "estimateSeconds": null
+  },
+  {
+    "dateUTC": "2026-10-25T23:01:24.016436+00:00",
+    "power": "charging",
+    "level": 93,
+    "estimateSeconds": null
+  }
+]

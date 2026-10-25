@@ -1,0 +1,42 @@
+Compiling BatteryTime for arm64 (macOS 13+)…
+Build failed: Swift compilation failed. Swift 6 / Xcode 16 or newer is required. Any existing app was preserved.
+Compiler and validation log: /Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/work/failure-project/.build/build.log
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/work/failure-project/Sources/BatteryCore/Broken.swift:1:1: error: expressions are not allowed at the top level
+1 | intentional compiler failure
+  | `- error: expressions are not allowed at the top level
+2 | 
+
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/work/failure-project/Sources/BatteryCore/Broken.swift:1:12: error: consecutive statements on a line must be separated by ';'
+1 | intentional compiler failure
+  |            `- error: consecutive statements on a line must be separated by ';'
+2 | 
+
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/work/failure-project/Sources/BatteryCore/Broken.swift:1:13: error: expressions are not allowed at the top level
+1 | intentional compiler failure
+  |             `- error: expressions are not allowed at the top level
+2 | 
+
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/work/failure-project/Sources/BatteryCore/Broken.swift:1:21: error: consecutive statements on a line must be separated by ';'
+1 | intentional compiler failure
+  |                     `- error: consecutive statements on a line must be separated by ';'
+2 | 
+
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/work/failure-project/Sources/BatteryCore/Broken.swift:1:22: error: expressions are not allowed at the top level
+1 | intentional compiler failure
+  |                      `- error: expressions are not allowed at the top level
+2 | 
+
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/work/failure-project/Sources/BatteryCore/Broken.swift:1:1: error: cannot find 'intentional' in scope
+1 | intentional compiler failure
+  | `- error: cannot find 'intentional' in scope
+2 | 
+
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/work/failure-project/Sources/BatteryCore/Broken.swift:1:13: error: cannot find 'compiler' in scope
+1 | intentional compiler failure
+  |             `- error: cannot find 'compiler' in scope
+2 | 
+
+/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/work/failure-project/Sources/BatteryCore/Broken.swift:1:22: error: cannot find 'failure' in scope
+1 | intentional compiler failure
+  |                      `- error: cannot find 'failure' in scope
+2 | 
