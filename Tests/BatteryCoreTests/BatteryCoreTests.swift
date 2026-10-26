@@ -137,7 +137,8 @@ final class BatteryCoreTests: XCTestCase {
         var estimator = learnedEstimator()
         let a = estimator.ingest(reading(630, level: 75.8))
         let b = estimator.ingest(reading(620, level: 20))
-        XCTAssertEqual(a, b)
+        XCTAssertNotNil(a)
+        XCTAssertNil(b)
     }
     func testTwoMinuteRefreshStillLearns() {
         var estimator = DischargeEstimator()
@@ -222,5 +223,137 @@ final class BatteryCoreTests: XCTestCase {
         """
         let points = try JSONDecoder().decode([HistoryPoint].self, from: Data(json.utf8))
         XCTAssertEqual(HistoryStore.pruned(points, now: start), [])
+    }
+
+    func testSystemUpwardJumpIsSmoothed() throws {
+        var estimator = DischargeEstimator()
+        _ = estimator.ingest(reading(system: 14_400))
+        let result = try XCTUnwrap(estimator.ingest(reading(30, system: 86_400)))
+        XCTAssertGreaterThan(result.seconds, 14_400)
+        XCTAssertLessThan(result.seconds, 20_000)
+    }
+    func testSystemDownwardJumpIsSmoothed() throws {
+        var estimator = DischargeEstimator()
+        _ = estimator.ingest(reading(system: 14_400))
+        let result = try XCTUnwrap(estimator.ingest(reading(30, system: 3_600)))
+        XCTAssertGreaterThan(result.seconds, 7_200)
+        XCTAssertLessThan(result.seconds, 14_400)
+    }
+    func testMissingSystemSignalDoesNotReuseOldSystemTime() {
+        var estimator = DischargeEstimator()
+        _ = estimator.ingest(reading(system: 14_400))
+        XCTAssertNil(estimator.ingest(reading(30)))
+    }
+    func testZeroBatteryNeverHasPositiveRuntime() {
+        var estimator = DischargeEstimator()
+        XCTAssertNil(estimator.ingest(reading(level: 0, system: 14_400)))
+    }
+    func testFullBatteryOnACHasNoDischargeEstimate() {
+        var estimator = DischargeEstimator()
+        XCTAssertNil(estimator.ingest(reading(level: 100, power: .pluggedIn, system: 14_400)))
+    }
+    func testRapidRefreshesDoNotInventLearning() {
+        var estimator = DischargeEstimator()
+        for index in 0...200 {
+            XCTAssertNil(estimator.ingest(reading(Double(index) / 10, level: 80 - Double(index) / 100)))
+        }
+    }
+    func testHighLoadAccelerationAdaptsWithinTenMinutes() throws {
+        var estimator = learnedEstimator()
+        var result: BatteryEstimate?
+        for index in 1...20 { result = estimator.ingest(reading(600 + Double(index * 30), level: 76 - Double(index) * 0.8)) }
+        let rate = try XCTUnwrap(result?.percentPerHour)
+        XCTAssertGreaterThan(rate, 80)
+        XCTAssertLessThan(rate, 100)
+    }
+    func testLowerConsumptionAdaptsWithoutWaitingForTwoMorePercent() throws {
+        var estimator = learnedEstimator()
+        var result: BatteryEstimate?
+        for index in 1...24 { result = estimator.ingest(reading(600 + Double(index * 30), level: 76 - Double(index) * 0.05)) }
+        let rate = try XCTUnwrap(result?.percentPerHour)
+        XCTAssertGreaterThan(rate, 4)
+        XCTAssertLessThan(rate, 10)
+    }
+    func testIdleStopsUsingOldHighConsumptionRate() throws {
+        var estimator = learnedEstimator()
+        var result: BatteryEstimate?
+        for index in 1...16 { result = estimator.ingest(reading(600 + Double(index * 30), level: 76)) }
+        XCTAssertLessThan(try XCTUnwrap(result?.percentPerHour), 18)
+        for index in 17...22 { result = estimator.ingest(reading(600 + Double(index * 30), level: 76)) }
+        XCTAssertNil(result)
+    }
+    func testIdleCanUseCurrentSystemSignalAfterObservedRateExpires() {
+        var estimator = learnedEstimator()
+        var result: BatteryEstimate?
+        for index in 1...22 { result = estimator.ingest(reading(600 + Double(index * 30), level: 76, system: 28_800)) }
+        XCTAssertEqual(result?.source, .system)
+        XCTAssertNotNil(result)
+    }
+    func testClockRollbackStartsFreshSession() {
+        var estimator = learnedEstimator()
+        let before = estimator.session
+        XCTAssertNil(estimator.ingest(reading(100, level: 76)))
+        XCTAssertNotEqual(estimator.session, before)
+    }
+    func testDuplicateSampleDoesNotChangeEstimate() {
+        var estimator = learnedEstimator()
+        let value = reading(630, level: 75.8)
+        let first = estimator.ingest(value)
+        XCTAssertEqual(estimator.ingest(value), first)
+    }
+    func testEstimateExpiresAndRejectsClockRollback() {
+        let estimate = BatteryEstimate(seconds: 100, date: start, source: .system)
+        XCTAssertTrue(estimate.isFresh(at: start.addingTimeInterval(50), maximumAge: 150))
+        XCTAssertFalse(estimate.isFresh(at: start.addingTimeInterval(200), maximumAge: 150))
+        XCTAssertFalse(estimate.isFresh(at: start.addingTimeInterval(-1), maximumAge: 150))
+        XCTAssertFalse(estimate.isFresh(at: start.addingTimeInterval(101), maximumAge: 150))
+    }
+    func testFormattingRejectsNonfiniteAndOverflowingValues() {
+        for value in [Double.infinity, .nan, Double.greatestFiniteMagnitude, -1] {
+            XCTAssertEqual(TimeText.compact(value), "—")
+            XCTAssertEqual(TimeText.full(value), "—")
+        }
+    }
+    func testInvalidTimestampsAndOversizedCapacitiesAreRejected() {
+        XCTAssertNil(BatteryReading(date: Date(timeIntervalSince1970: .infinity), current: 50, maximum: 100, power: .battery))
+        let value = BatteryReading(date: start, current: 50, maximum: 100, power: .battery,
+                                   fullCapacity: 1e100, designCapacity: 1e100)
+        XCTAssertNil(value?.capacityHealth)
+    }
+    func testIncrementalHistoryMatchesFullPruning() {
+        let session = UUID()
+        var history: [HistoryPoint] = []
+        var all: [HistoryPoint] = []
+        for index in 0..<3500 {
+            let date = start.addingTimeInterval(Double(index * 30))
+            let point = HistoryPoint(date: date, level: 80, power: .battery, estimateSeconds: nil, session: session)
+            all.append(point)
+            history = HistoryStore.appending(point, to: history, now: date)
+        }
+        XCTAssertEqual(history, HistoryStore.pruned(all, now: all.last!.date))
+    }
+    func testChartReductionRetainsExtremesAndRealValues() {
+        let session = UUID()
+        let points = (0..<3000).map { index in
+            HistoryPoint(date: start.addingTimeInterval(Double(index * 15)), level: index == 1234 ? 1 : 80,
+                         power: .battery, estimateSeconds: index == 2345 ? 72_000 : 3600, session: session)
+        }
+        let levels = HistoryStore.chartPoints(points, remaining: false)
+        let times = HistoryStore.chartPoints(points, remaining: true)
+        XCTAssertTrue(levels.count <= 240)
+        XCTAssertTrue(times.count <= 240)
+        XCTAssertTrue(levels.contains(points[1234]))
+        XCTAssertTrue(times.contains(points[2345]))
+        XCTAssertEqual(levels.first, points.first)
+        XCTAssertEqual(levels.last, points.last)
+        XCTAssertTrue(levels.allSatisfy { points.contains($0) })
+    }
+    func testHistoryFileSizeLimit() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("large.json")
+        try Data(repeating: 32, count: 2_000_001).write(to: url)
+        XCTAssertThrowsError(try HistoryStore.load(from: url, now: start))
     }
 }

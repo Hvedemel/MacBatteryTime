@@ -1,0 +1,3 @@
+outputs/BatteryTime-4.1/BatteryTime.app: valid on disk
+outputs/BatteryTime-4.1/BatteryTime.app: satisfies its Designated Requirement
+Validated bundle: outputs/BatteryTime-4.1/BatteryTime.app

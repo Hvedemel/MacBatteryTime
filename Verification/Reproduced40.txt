@@ -1,0 +1,2 @@
+4.0 system jump 30s later: 86400.0 seconds (was 14400)
+4.0 observed consumption after 12 minutes without a charge decrease: Optional(11.891486944314082)

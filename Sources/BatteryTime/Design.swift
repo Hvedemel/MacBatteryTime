@@ -24,17 +24,7 @@ enum BatteryStyle {
             level <= 20 ? Color(red: 0.92, green: 0.61, blue: 0.13) :
             Color(red: 0.19, green: 0.70, blue: 0.43)
     }
-    static func symbol(_ reading: BatteryReading?) -> String {
-        guard let reading else { return "battery.0percent" }
-        if reading.power == .charging { return "battery.100percent.bolt" }
-        switch reading.percentage {
-        case 88...100: return "battery.100percent"
-        case 63..<88: return "battery.75percent"
-        case 38..<63: return "battery.50percent"
-        case 13..<38: return "battery.25percent"
-        default: return "battery.0percent"
-        }
-    }
+
 }
 
 struct Card<Content: View>: View {
@@ -96,16 +86,19 @@ struct RemainingTimeView: View {
 
     var body: some View {
         // A minute timeline runs only while a view is visible. Sampling has its own tolerant timer.
-        TimelineView(.periodic(from: .now, by: 60)) { context in
+        TimelineView(.periodic(from: .now, by: 60)) { _ in
+            // A schedule's last entry can predate a newly received reading. Evaluate
+            // freshness against real wall time, not the previous scheduled minute.
+            let now = Date()
             let reading = monitor.report.reading
             VStack(alignment: .leading, spacing: compact ? 6 : 10) {
                 Text(title(reading)).font(.system(size: compact ? 11 : 12, weight: .medium)).foregroundStyle(.secondary)
                 if let estimate = monitor.estimate, reading?.power == .battery,
-                   let updated = monitor.lastUpdated, context.date.timeIntervalSince(updated) <= max(150, monitor.refreshInterval * 2.5) {
-                    Text(TimeText.compact(estimate.remaining(at: context.date)))
+                   estimate.isFresh(at: now, maximumAge: max(150, monitor.refreshInterval * 2.5)) {
+                    Text(TimeText.compact(estimate.remaining(at: now)))
                         .font(.system(size: compact ? 32 : 52, weight: .medium, design: .rounded))
                         .tracking(compact ? -1 : -2).monospacedDigit()
-                        .accessibilityLabel("Estimated \(TimeText.full(estimate.remaining(at: context.date))) remaining")
+                        .accessibilityLabel("Estimated \(TimeText.full(estimate.remaining(at: now))) remaining")
                     Text("Until about \(estimate.emptyDate.formatted(date: .omitted, time: .shortened))")
                         .font(.system(size: compact ? 11 : 13)).foregroundStyle(.secondary)
                     if !compact {

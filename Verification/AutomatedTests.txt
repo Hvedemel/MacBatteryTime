@@ -1,0 +1,79 @@
+PASS testMissingCapacityIsNeverZeroPercent
+PASS testInvalidCapacityRejected
+PASS testCapacityNormalizedCorrectly
+PASS testPercentageCapacityCannotBecomeHealth
+PASS testHealthRequiresConsistentCapacity
+PASS testSystemSentinelsAndOutliersRejected
+PASS testNoEstimateFromPercentageAlone
+PASS testFlatBatteryHasNoInventedEstimate
+PASS testSystemEstimateAvailableImmediately
+PASS testObservedRateMatchesKnownDrain
+PASS testQuantizedOnePercentStepsCanLearn
+PASS testAgreeingSystemSignalIsBlended
+PASS testContradictorySystemSignalDoesNotOverrideObservedDrain
+PASS testWorkloadChangeAdapts
+PASS testChargingClearsDischargeEstimate
+PASS testAdapterWithoutChargingHasNoCountdown
+PASS testUnknownPowerHasNoCountdown
+PASS testSleepGapResetsLearning
+PASS testExplicitWakeResetDoesNotReuseOldDrain
+PASS testReplacementBatteryResetsLearning
+PASS testCapacityIncreaseResetsLearning
+PASS testLowPowerModeChangeResetsLearning
+PASS testOutOfOrderSampleDoesNotDistortRate
+PASS testTwoMinuteRefreshStillLearns
+PASS testStableAdapterSessionGroupsHistory
+PASS testCountdownAndEmptyDate
+PASS testTimeFormatting
+PASS testThresholdAlertsOncePerDischarge
+PASS testThresholdJumpSendsOnlyMostUrgentAlert
+PASS testHistoryRoundTripsAndPrunes
+PASS testInvalidFutureAndDuplicateHistoryRemoved
+PASS testHistoryBounded
+PASS testCorruptHistoryRaisesAnError
+PASS testDecodedInvalidEstimateIsDiscarded
+PASS testSystemUpwardJumpIsSmoothed
+PASS testSystemDownwardJumpIsSmoothed
+PASS testMissingSystemSignalDoesNotReuseOldSystemTime
+PASS testZeroBatteryNeverHasPositiveRuntime
+PASS testFullBatteryOnACHasNoDischargeEstimate
+PASS testRapidRefreshesDoNotInventLearning
+PASS testHighLoadAccelerationAdaptsWithinTenMinutes
+PASS testLowerConsumptionAdaptsWithoutWaitingForTwoMorePercent
+PASS testIdleStopsUsingOldHighConsumptionRate
+PASS testIdleCanUseCurrentSystemSignalAfterObservedRateExpires
+PASS testClockRollbackStartsFreshSession
+PASS testDuplicateSampleDoesNotChangeEstimate
+PASS testEstimateExpiresAndRejectsClockRollback
+PASS testFormattingRejectsNonfiniteAndOverflowingValues
+PASS testInvalidTimestampsAndOversizedCapacitiesAreRejected
+PASS testIncrementalHistoryMatchesFullPruning
+PASS testChartReductionRetainsExtremesAndRealValues
+PASS testHistoryFileSizeLimit
+52 core regression tests completed; 0 failures.
+PASS native IOKit snapshot
+PASS desktop and absent battery
+PASS unavailable descriptors
+PASS invalid numeric fields
+PASS time units and fallback
+PASS charging, full, contradictory state
+PASS skip unused API calls
+PASS real menu formatter
+PASS coalesced power refresh
+PASS stop drops late read
+PASS clear history/read race
+PASS sleep/wake lifecycle
+PASS mode change/read race
+PASS startup merge/final write
+PASS write ordering/clock rollback
+PASS write error
+PASS corrupt history
+PASS interval validation
+PASS permission/off race
+PASS permission failure
+PASS pending read/menu freshness
+PASS power notification burst
+PASS trailing event canceled
+PASS background power notifications
+PASS monitor released
+25 native app scenarios completed; 0 failures.

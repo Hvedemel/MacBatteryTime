@@ -1,0 +1,26 @@
+Executable=/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/outputs/BatteryTime-4.1/BatteryTime.app/Contents/MacOS/BatteryTime
+Identifier=dk.batterytime.menubar
+Format=app bundle with Mach-O universal (x86_64 arm64)
+CodeDirectory v=20500 size=2359 flags=0x10002(adhoc,runtime) hashes=67+3 location=embedded
+VersionPlatform=1
+VersionMin=851968
+VersionSDK=1769472
+Hash type=sha256 size=32
+CandidateCDHash sha256=4bc6b396ba39e6ae45b020f37d6e29a6570a6697
+CandidateCDHashFull sha256=4bc6b396ba39e6ae45b020f37d6e29a6570a669767665b89b1758410c98ff75c
+Hash choices=sha256
+CMSDigest=4bc6b396ba39e6ae45b020f37d6e29a6570a669767665b89b1758410c98ff75c
+CMSDigestType=2
+Executable Segment base=0
+Executable Segment limit=360448
+Executable Segment flags=0x1
+Page size=16384
+CDHash=4bc6b396ba39e6ae45b020f37d6e29a6570a6697
+Signature=adhoc
+Info.plist entries=14
+TeamIdentifier=not set
+Runtime Version=27.0.0
+Sealed Resources version=2 rules=13 files=1
+Internal requirements count=0 size=12
+Total signatures=1
+Chosen signature=1

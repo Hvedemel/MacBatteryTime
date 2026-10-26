@@ -16,7 +16,14 @@ enum BatteryTimeMain {
             do {
                 let data = try encoder.encode(BatteryReader.read())
                 print(String(decoding: data, as: UTF8.self))
-            } catch { fputs("Diagnostics failed: \(error)\n", stderr) }
+            } catch { fputs("Diagnostics failed: \(error)\n", stderr); exit(EXIT_FAILURE) }
+            return
+        }
+        // Avoid duplicate menu items and concurrent writers when another copy is open.
+        if let identifier = Bundle.main.bundleIdentifier,
+           let existing = NSRunningApplication.runningApplications(withBundleIdentifier: identifier)
+            .first(where: { $0.processIdentifier != ProcessInfo.processInfo.processIdentifier }) {
+            existing.activate(options: [.activateIgnoringOtherApps])
             return
         }
         let application = NSApplication.shared
@@ -28,13 +35,16 @@ enum BatteryTimeMain {
 }
 
 @MainActor
-final class ApplicationDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+final class ApplicationDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNotificationCenterDelegate {
     private let monitor = BatteryMonitor()
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     private var dashboard: NSWindow?
     private var settings: NSWindow?
     private var subscriptions = Set<AnyCancellable>()
+    private var lastPresentation: StatusPresentation?
+    private var symbolImages: [String: NSImage] = [:]
+    private var terminating = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -71,6 +81,8 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard !terminating else { return .terminateLater }
+        terminating = true
         Task {
             await monitor.stop()
             sender.reply(toApplicationShouldTerminate: true)
@@ -80,25 +92,21 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func updateStatusItem() {
         guard let button = statusItem?.button else { return }
-        let reading = monitor.report.reading
-        let image = NSImage(systemSymbolName: BatteryStyle.symbol(reading), accessibilityDescription: "Battery")
-        image?.isTemplate = true
-        button.image = image
-        if let reading {
-            var text = " \(reading.percentage)%"
-            if reading.power == .charging { text += " · Charging" }
-            else if reading.power == .pluggedIn { text += " · AC" }
-            else if reading.power == .unknown { text += " · —" }
-            else if monitor.showTimeInMenu {
-                text += monitor.estimate.map { " · \(TimeText.compact($0.remaining(at: Date())))" } ?? " · …"
+        let presentation = StatusPresentation.make(report: monitor.report, estimate: monitor.estimate, now: Date(),
+            showTime: monitor.showTimeInMenu, maximumAge: max(150, monitor.refreshInterval * 2.5))
+        guard presentation != lastPresentation else { return }
+        if presentation.symbol != lastPresentation?.symbol {
+            if symbolImages[presentation.symbol] == nil {
+                let image = NSImage(systemSymbolName: presentation.symbol, accessibilityDescription: "Battery")
+                image?.isTemplate = true
+                symbolImages[presentation.symbol] = image
             }
-            button.title = text
-            button.toolTip = "BatteryTime · \(reading.power.title)\(monitor.estimate.map { " · Estimated \(TimeText.full($0.seconds)) remaining" } ?? "")"
-        } else {
-            button.title = monitor.report.availability == .noBattery ? " No battery" : " —"
-            button.toolTip = monitor.report.message
+            button.image = symbolImages[presentation.symbol]
         }
-        button.setAccessibilityLabel(button.toolTip)
+        button.title = presentation.title
+        button.toolTip = presentation.toolTip
+        button.setAccessibilityLabel(presentation.toolTip)
+        lastPresentation = presentation
     }
 
     @objc private func togglePopover() {
@@ -119,10 +127,11 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             window.title = "BatteryTime"
             window.titlebarAppearsTransparent = true
             window.isReleasedWhenClosed = false
+            window.delegate = self
             window.minSize = NSSize(width: 800, height: 730)
             window.contentView = NSHostingView(rootView: DashboardView(monitor: monitor, openSettings: { [weak self] in self?.showSettings() }))
+            if !window.setFrameUsingName("BatteryTimeDashboard") { window.center() }
             window.setFrameAutosaveName("BatteryTimeDashboard")
-            window.center()
             dashboard = window
         }
         NSApp.activate(ignoringOtherApps: true)
@@ -131,18 +140,29 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     @objc func showSettings() {
         popover.performClose(nil)
-        monitor.refreshSystemSettings()
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 500, height: 640),
                                   styleMask: [.titled, .closable], backing: .buffered, defer: false)
             window.title = "BatteryTime Settings"
             window.isReleasedWhenClosed = false
+            window.delegate = self
             window.contentView = NSHostingView(rootView: SettingsView(monitor: monitor))
             window.center()
             settings = window
         }
         NSApp.activate(ignoringOtherApps: true)
         settings?.makeKeyAndOrderFront(nil)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow else { return }
+        // Release hosting trees so closed windows cannot retain minute timelines/charts.
+        if window === dashboard { window.contentView = nil; dashboard = nil }
+        if window === settings { window.contentView = nil; settings = nil }
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window === settings { monitor.refreshSystemSettings() }
     }
 
     private func installMainMenu() {

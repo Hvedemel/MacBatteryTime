@@ -1,0 +1,25 @@
+PASS real universal application bundle validates
+PASS missing executable rejected
+PASS non-executable permissions rejected
+PASS mismatched executable metadata rejected
+PASS inconsistent deployment metadata rejected
+PASS missing icon rejected
+PASS invalid sealed resources rejected
+PASS corrupt executable rejected
+PASS missing argument rejected
+PASS unsupported architecture rejected
+PASS symlink destination rejected
+PASS concurrent build lock respected
+PASS actual compiler failure reported
+PASS compiler error preserves previous app and clears lock
+PASS compiler error without previous app
+PASS failed compilation publishes no incomplete bundle
+PASS invalid source metadata rejected
+PASS publication move failure reported
+PASS publication move failure restores previous app
+PASS post-publication validation failure reported
+PASS post-publication validation failure restores previous app
+PASS real fixture compiles, signs, runs diagnostics, and normalizes restrictive umask
+PASS code-signature resources remain readable under restrictive umask
+PASS success/failure staging directories and locks cleaned
+24 build/bundle checks completed; 0 failures.

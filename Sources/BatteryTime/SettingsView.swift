@@ -39,14 +39,12 @@ struct SettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
             } header: { Text("Privacy") }
             Section {
-                LabeledContent("BatteryTime", value: "4.0")
+                LabeledContent("BatteryTime", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—")
                 Text("Remaining time is an estimate, not a guarantee. Activity, temperature, and battery condition affect runtime.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped).frame(width: 500, height: 640)
-        .onAppear { monitor.refreshSystemSettings() }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in monitor.refreshSystemSettings() }
         .confirmationDialog("Clear recorded battery history?", isPresented: $confirmClear) {
             Button("Clear History", role: .destructive) { monitor.clearHistory() }
             Button("Cancel", role: .cancel) {}

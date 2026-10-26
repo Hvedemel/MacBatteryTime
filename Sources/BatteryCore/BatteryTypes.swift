@@ -29,7 +29,8 @@ public struct BatteryReading: Codable, Sendable, Equatable {
                  systemSeconds: Double? = nil, lowPowerMode: Bool = false,
                  identity: String = "internal", health: String? = nil, cycles: Int? = nil,
                  fullCapacity: Double? = nil, designCapacity: Double? = nil) {
-        guard let current, let maximum, current.isFinite, maximum.isFinite,
+        guard date.timeIntervalSinceReferenceDate.isFinite,
+              let current, let maximum, current.isFinite, maximum.isFinite,
               maximum > 0, current >= 0, current <= maximum * 1.01 else { return nil }
         self.date = date
         level = min(100, current / maximum * 100)
@@ -42,7 +43,8 @@ public struct BatteryReading: Codable, Sendable, Equatable {
         // Percentage-normalized capacity (often 100) must never be labeled mAh
         // or compared with the physical design capacity.
         if let fullCapacity, let designCapacity, fullCapacity.isFinite, designCapacity.isFinite,
-           fullCapacity > 100, designCapacity > 100, fullCapacity <= designCapacity * 1.2 {
+           fullCapacity > 100, designCapacity > 100, designCapacity <= 1_000_000,
+           fullCapacity <= designCapacity * 1.2 {
             self.fullCapacity = fullCapacity
             self.designCapacity = designCapacity
         } else {
@@ -89,6 +91,10 @@ public struct BatteryEstimate: Codable, Sendable, Equatable {
     }
 
     public func remaining(at now: Date) -> Double { max(0, seconds - max(0, now.timeIntervalSince(date))) }
+    public func isFresh(at now: Date, maximumAge: TimeInterval) -> Bool {
+        let age = now.timeIntervalSince(date)
+        return age >= 0 && age <= maximumAge && remaining(at: now) > 0
+    }
     public var emptyDate: Date { date.addingTimeInterval(seconds) }
 }
 
@@ -115,13 +121,17 @@ public struct HistoryPoint: Codable, Sendable, Identifiable, Equatable {
 }
 
 public enum TimeText {
+    private static func minutes(_ seconds: Double) -> Int? {
+        guard seconds.isFinite, seconds >= 0, seconds <= 72 * 3600 else { return nil }
+        return Int(ceil(seconds / 60))
+    }
     public static func compact(_ seconds: Double) -> String {
-        let minutes = max(0, Int(ceil(max(0, seconds) / 60)))
+        guard let minutes = minutes(seconds) else { return "—" }
         return minutes >= 60 ? "\(minutes / 60)h \(minutes % 60)m" : "\(minutes)m"
     }
 
     public static func full(_ seconds: Double) -> String {
-        let minutes = max(0, Int(ceil(max(0, seconds) / 60)))
+        guard let minutes = minutes(seconds) else { return "—" }
         let hours = minutes / 60
         let rest = minutes % 60
         if hours == 0 { return "\(rest) \(rest == 1 ? "minute" : "minutes")" }

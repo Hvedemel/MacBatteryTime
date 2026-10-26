@@ -1,0 +1,3 @@
+Checked Xcode project references and shared scheme; Swift source files: 10
+Project source/configuration/document/resource inventory: 47 files
+Checked every PNG icon representation and ICNS container length.

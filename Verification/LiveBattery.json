@@ -3,9 +3,9 @@
   "message" : "Live IOKit reading",
   "reading" : {
     "cycles" : 494,
-    "date" : "2026-10-25T23:05:50Z",
+    "date" : "2026-10-26T01:19:14Z",
     "identity" : "4294969361",
-    "level" : 93,
+    "level" : 97,
     "lowPowerMode" : false,
     "power" : "charging"
   }

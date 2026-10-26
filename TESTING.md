@@ -1,48 +1,44 @@
-# Verification of the delivered build
+# BatteryTime 4.1 verification
 
-Performed on 25–26 October 2026, Europe/Copenhagen, on an Apple Silicon Mac running macOS 27.0. Tools: Apple Swift 6.4 and macOS SDK 27.0 from Command Line Tools. Full Xcode and Rosetta were not installed.
+Performed 26 October 2026 on an Apple Silicon Mac running macOS 27.0, using Apple Swift 6.4 and macOS SDK 27.0 from Command Line Tools. Full Xcode, Rosetta, physical Intel hardware, and a macOS 13 machine were unavailable.
 
-## Completed checks
+## Automated results
 
-| Check | Result |
-| --- | --- |
-| Original archive audit | All three original files inspected; original Swift source also compiled after setting a writable module cache. |
-| Swift 6 compile | All app and core sources compile with complete concurrency checking and warnings treated as errors, for arm64 and x86_64. |
-| Universal app | Two executable Mach-O slices; each declares macOS 13.0 as its minimum OS. |
-| Bundle validation | Valid Info.plist; matching executable name; executable permission; icon resource; package metadata; strict code-signature validation. |
-| Core regression suite | **34 tests passed, 0 failures**, run as real compiled Swift code through the included Foundation runner. |
-| Real hardware readings | Live IOKit percentage, battery operation, time-to-empty, Low Power Mode state, and cycle count read successfully. A paired check matched `pmset`: 96% and 7h 04m; cycle count was 494. Later GUI readings updated as the battery discharged. |
-| Real power transition | Saved history recorded battery → plugged in → charging during the session, with no discharge estimate on external power. The final dashboard and popover displayed Charging at 93%, matching a live `pmset` check. |
-| Dashboard | Opened a real native window, inspected accessibility state and actual rendered dark appearance, verified percentage, remaining time, estimated empty time, real history, and settings navigation. |
-| Charts | Changed among 1-, 6-, and 24-hour ranges; verified selection and chart data changed; scrolled through both charts and footer. |
-| Menu popover | Opened the native status-item popover using the app's ⌘B command, which calls the same action as the status item. Verified its percentage, state, time, visualization, refresh/settings/quit controls, and used Open Dashboard successfully. |
-| Settings | Opened the real native settings window, inspected optional-feature states, changed interval from 30 seconds to 2 minutes and restored 30 seconds; toggled menu time off and back on. |
-| Clean termination | Quit through the app; termination completed and history was saved. |
-| Persistence/relaunch | Read saved history after quit, relaunched the app, and verified earlier real chart readings remained. Learning starts a new session on relaunch. |
-| Failure safety | Injected deliberately invalid Swift in an isolated test copy. Build failed with compiler diagnostics, preserved the previous app marker, and removed all incomplete staging bundles. |
-| Xcode project | Project property-list syntax validated; shared scheme and source/resource references checked. The app's exact source files were compiled successfully with the command-line toolchain. |
-| Shell scripts | Shell syntax validated; universal build, validation, expected compiler failure, and launch path exercised. |
-| Idle spot check | An idle sample showed 0.0% CPU and 33,760 KiB resident memory. This is one observation, not a sustained performance benchmark. |
+**101 checks passed, zero failures:**
 
-The regression suite covers rate estimation, system estimates, blended/conflicting signals, percentage quantization, workload adaptation, invalid/missing values, charging/external-power/unknown-source transitions, simulated sleep gaps, explicit wake resets, battery replacement, Low Power Mode changes, out-of-order samples, slower refresh, countdowns, notification threshold deduplication/rearming, and persistent-history bounds/corruption.
+- **52 core regression tests**, discovered from the shared XCTest source and executed as compiled Swift through the Foundation runner. Covers real timed discharge/rounded percentages, changing load, idle, system-time smoothing, invalid/missing signals, zero/full/low battery, charging, external/unknown power, gaps, battery replacement, low-power changes, backwards timestamps, countdown freshness, formatting overflow, notification thresholds, chart bounds/extrema, persistence corruption, and file limits.
+- **25 native app scenarios**, compiling the production reader, menu presenter, monitor, and persistence actor. Covers native IOKit reads; typed/missing/malformed source data; time units/fallback; charging/full/inconsistent state; menu formatting and stale time; request coalescing; canceled/late reads; clear/read races; simulated sleep/wake and mode changes; startup history merge and final write; revision ordering despite clock rollback; write/read failures; interval validation; notification-approval/off races; permission errors; freshness while a read is pending; bounded notification bursts; cancellation of trailing events; and release of a stopped monitor. A background thread also posts through the actual main-queue observer relay and exercises sleep/wake handlers without putting the Mac to sleep.
+- **24 build/bundle checks**, validating the real app and using isolated corruption/fault injection. Covers missing/corrupt/non-executable binaries, mismatched metadata, invalid deployment metadata, missing icons, broken signatures, bad CLI arguments, symlink destinations, destination locking, actual Swift compiler failures, no incomplete published output, preservation of the previous app, failed final moves, failed post-publication validation and rollback, cleanup, and restrictive umask including signature-resource permissions. Small genuinely compiled Swift fixtures test packaging mechanics; the delivered GUI is compiled independently from the complete source.
 
-## Limits and checks not claimed
+Logs are included under `Verification/`. Test history is confined to temporary directories; dedicated test preference domains are cleaned. Actual notification/login preferences and the user's recorded history were not cleared for testing.
 
-- **No physical Intel or macOS 13 runtime test.** Both architectures compile and link and have the correct deployment target. Rosetta was unavailable. The installed toolchain emits an Intel linker warning that its optional `libswiftCompatibilityPacks.a` has only arm64/arm64e slices; the linker still produced a verified x86_64 executable with no undefined-symbol build failure. Validate the Release build on an actual Intel Mac before public distribution, preferably using a complete Xcode toolchain.
-- **No Xcode GUI build or XCTest execution here.** Full Xcode is absent. The working command-line build and standalone regression runner were executed; the Xcode project is supplied and syntax validated, but an `xcodebuild` run cannot be claimed.
-- **No physical sleep/wake, battery replacement, or desktop-Mac test, and no repeated charger stress test.** A live charger connection and resulting external-power/charging states were observed and verified; additional transitions are covered in the estimation tests. The app registers native power/sleep/wake notifications. The user's live Mac was not put to sleep or otherwise disrupted for testing.
-- **No end-to-end notification delivery or next-login test.** The optional settings were left off. The notification-threshold logic was tested. Login status correctly displayed that the build should be moved to Applications; actual registration, user approval, and a login cycle remain to be tested after installation.
-- **Only the current dark system appearance was visually inspected.** Light-mode styling is implemented through native adaptive colors/materials; a separate light-mode visual run is not claimed.
-- **Health/capacity were unavailable through the selected public power-source fields on this Mac.** The app displayed Unavailable and omitted physical-capacity details. It did not substitute guessed health values or turn a percentage capacity into mAh.
-- **Long-term runtime accuracy is not yet field calibrated.** Synthetic discharge/workload tests passed and real readings updated. A full battery discharge, thermal variation, and multi-day energy/memory profiles were not performed.
-- **Local signing only.** The included app is ad-hoc signed and verified, not Developer ID signed or notarized. See README for safe local building and Apple's supported first-open process.
+## Build, static, and native runtime checks
 
-## Environment notes
+- Complete app compiled for **arm64 and x86_64**, with Swift 6, complete concurrency checking, and compiler warnings treated as errors. Both Mach-O executable slices declare **macOS 13.0**.
+- Validated the actual executable type, plist fields, icon, executable/resource permissions, and strict signatures for all architectures. Native `--diagnostics` was executed before publication; the bundle was checked again after publication.
+- Validated all shell scripts with `bash -n`, Xcode project source/resource references and plist syntax, shared-scheme XML, every PNG representation, and the ICNS container. Icon generation ran successfully; a missing argument returned usage/exit 2 rather than crashing.
+- Ran a compiled reproduction against 4.0: a four-hour macOS signal changed directly to 24 hours after 30 seconds, and an observed drain estimate persisted after twelve minutes at unchanged charge. New tests exercise the corrected cases.
+- Launched the reviewed real `.app` through macOS, inspected the dashboard, refreshed readings, opened Settings and confirmed version 4.1, closed/recreated windows, opened the menu popover, and verified live remaining time. Actual charging was also observed during the review; the interface cleared the discharge countdown and displayed Charging. Real cycle count and missing-health handling remained intact.
+- Quit through the real app and verified it terminated cleanly; startup restored earlier recorded history. The original interface and useful functionality remain present.
 
-The agent's restricted shell cannot perform normal Launch Services app registration: its initial `open` returned an OS launch error, and a direct GUI-process launch inside that sandbox aborted in Apple's registration code. Launching the same verified app through normal macOS Launch Services outside the restricted shell succeeded, and real UI and quit/relaunch checks then passed. This does not require changing macOS security settings. The delivered build script uses standard `open` when run normally in Terminal.
+## Signing and historical launch error
 
-This SDK also exports an `@State` macro whose implementation is absent from Command Line Tools. The source explicitly aliases the existing SwiftUI state property-wrapper type, preserving compatibility without depending on that macro plugin. The test runner likewise avoids a dependency on XCTest for Command Line Tools installations.
+The supplied 4.0 app had a valid executable, matching metadata, and an intact local signature; native diagnostics ran. A missing executable in that supplied archive was not reproduced as the cause of the historical “damaged or incomplete” message.
 
-## Suggested physical follow-up
+The new script checks and rejects the concrete malformed-bundle cases above and retains/rolls back the previous complete app on tested failures. It also normalizes permissions, including files created by codesign, instead of relying on the caller's umask.
 
-After installing, keep BatteryTime running while unplugged for at least five minutes and two percentage points of discharge. Connect and disconnect the charger, sleep and wake the Mac, and observe that learning resets without a stale countdown. Enable notifications only if wanted, verify macOS permission and one alert per threshold, and approve launch at login if macOS requests it. Repeat on an Intel Mac and macOS 13 before making a public release.
+The build is **ad-hoc signed with hardened runtime, not Developer ID signed or notarized**. Strict signature-integrity validation passes, while Gatekeeper assessment returns **rejected**, consistent with the absence of a trusted distribution signature/notarization. It was launched normally on this Mac; that does not establish trust for downloaded copies on other Macs. README links Apple's supported first-open process and provides local source-build instructions. Gatekeeper/SIP were not disabled and quarantine attributes were not stripped.
+
+The agent's restricted shell has separate GUI-registration restrictions, so real GUI launching/inspection used the native UI tool. Command-line diagnostics, compilation, and bundle verification run without opening Xcode.
+
+## Remaining limitations
+
+- **Intel and macOS 13 runtime are untested.** Both slices compile/link and have the correct minimum OS. This toolchain warns that `libswiftCompatibilityPacks.a` lacks x86_64; the warning is preserved in the compiler log. No direct undefined pack-helper references were found by an Intel `nm` inspection, but that does not replace an Intel/macOS 13 run. Use a complete Xcode toolchain and physical supported Macs before public distribution.
+- **Full Xcode build/XCTest UI execution was unavailable.** The app's exact source compiled through swiftc; the project/scheme references were validated. Core XCTest is available through Package.swift in full Xcode; native scenarios use the supplied CLI runner.
+- **Physical sleep/wake, battery replacement, desktop-Mac operation, and repeated charger stress were not performed.** Those state transitions are covered by injected native/core scenarios. A live charging state and a real discharging state were observed without forcing changes to the user's hardware or energy settings.
+- **Actual notification delivery and next-login launching remain untested.** Existing notification/login choices were preserved; no fabricated low-battery reading was used to send a real alert. Permission-race/error logic and threshold behavior were executed with controlled inputs.
+- **Light appearance and accessibility variations were not exhaustively inspected.** The current native appearance was reviewed; adaptive styling and reduced-motion behavior remain implemented.
+- **No full discharge calibration or multi-day CPU/GPU/energy/leak benchmark.** Synthetic traces establish bounded smoothing/adaptation behavior, not guaranteed real-world remaining-time accuracy. Battery age, temperature, voltage, macOS reserves, and sudden workload changes still affect runtime. Any process spot measurements are not a long-term performance guarantee.
+- **Power-source health/capacity fields are hardware dependent.** This Mac did not supply consistent health/capacity data through the selected public API; Unavailable/omitted fields remain intentional. Cycle count was reported.
+
+REVIEW.md lists the complete findings and performance changes. The final ZIP is checked after extraction for signature integrity, executable permissions, and source/binary equality; no compiler caches or test fixture apps are included.

@@ -118,8 +118,9 @@ private struct HistoryChart: View {
     @ViewState private var selectedDate: Date?
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 60)) { context in
-            let start = context.date.addingTimeInterval(-hours * 3600)
+        TimelineView(.periodic(from: .now, by: 60)) { _ in
+            let now = Date()
+            let start = now.addingTimeInterval(-hours * 3600)
             let points = monitor.history.filter { $0.date >= start && (kind == .level || $0.estimateSeconds != nil) }
             Card {
                 VStack(alignment: .leading, spacing: 16) {
@@ -129,7 +130,7 @@ private struct HistoryChart: View {
                         Text(kind == .level ? "RECORDED" : "ESTIMATED").font(.system(size: 8, weight: .semibold)).tracking(1).foregroundStyle(.tertiary)
                     }
                     if points.count >= 2 {
-                        Chart(points) { point in
+                        Chart(HistoryStore.chartPoints(points, remaining: kind == .remaining)) { point in
                             if let value = value(point) {
                                 LineMark(x: .value("Time", point.date), y: .value("Value", value), series: .value("Session", point.session.uuidString))
                                     .foregroundStyle(kind == .level ? Color.green : Color.accentColor)
@@ -138,7 +139,7 @@ private struct HistoryChart: View {
                                     .foregroundStyle(kind == .level ? Color.green : Color.accentColor).symbolSize(5)
                             }
                         }
-                        .chartXScale(domain: start...context.date)
+                        .chartXScale(domain: start...now)
                         .chartYScale(domain: 0...(kind == .level ? 100 : max(1, points.compactMap { $0.estimateSeconds.map { $0 / 3600 } }.max() ?? 1) * 1.15))
                         .chartXAxis { AxisMarks(values: .automatic(desiredCount: 3)) { _ in AxisValueLabel(format: .dateTime.hour().minute()) } }
                         .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { axis in

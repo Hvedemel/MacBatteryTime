@@ -20,6 +20,39 @@ public enum HistoryStore {
         return pruned(try JSONDecoder().decode([HistoryPoint].self, from: data), now: now)
     }
 
+    /// Fast path for the sorted, validated history already held by the monitor.
+    public static func appending(_ point: HistoryPoint, to points: [HistoryPoint], now: Date) -> [HistoryPoint] {
+        guard point.isValid, point.date <= now else { return points }
+        guard points.last.map({ $0.date < point.date }) ?? true else {
+            return pruned(points + [point], now: now)
+        }
+        var result = points
+        result.append(point)
+        let cutoff = now.addingTimeInterval(-retention)
+        let start = result.firstIndex { $0.date >= cutoff } ?? result.endIndex
+        if start > 0 { result.removeFirst(start) }
+        if result.count > maximumPoints { result.removeFirst(result.count - maximumPoints) }
+        return result
+    }
+
+    /// Retains actual first/last and extreme observations, rather than creating synthetic points.
+    public static func chartPoints(_ points: [HistoryPoint], remaining: Bool, limit: Int = 240) -> [HistoryPoint] {
+        guard limit >= 4, points.count > limit else { return points }
+        let buckets = max(1, limit / 4)
+        let width = Int(ceil(Double(points.count) / Double(buckets)))
+        var result: [HistoryPoint] = []
+        result.reserveCapacity(limit)
+        for start in stride(from: 0, to: points.count, by: width) {
+            let end = min(points.count, start + width)
+            let range = start..<end
+            let value: (Int) -> Double = { remaining ? (points[$0].estimateSeconds ?? 0) : points[$0].level }
+            let low = range.min { value($0) < value($1) } ?? start
+            let high = range.max { value($0) < value($1) } ?? start
+            for index in Set([start, end - 1, low, high]).sorted() { result.append(points[index]) }
+        }
+        return result
+    }
+
     public static func save(_ points: [HistoryPoint], to url: URL, now: Date) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         let data = try JSONEncoder().encode(pruned(points, now: now))
@@ -41,7 +74,7 @@ public struct LowBatteryAlerts: Sendable {
         defer { previousLevel = reading.level }
         let crossed = [5, 10, 20].filter { threshold in
             reading.level <= Double(threshold) && !sent.contains(threshold) &&
-                (previousLevel == nil || previousLevel! > Double(threshold))
+                (previousLevel.map { $0 > Double(threshold) } ?? true)
         }
         guard let mostUrgent = crossed.first else { return nil }
         // A jump from 25% to 4% should send one useful alert, not three.

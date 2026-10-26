@@ -1,6 +1,0 @@
-Compiling BatteryTime for arm64 (macOS 13+)…
-Compiling BatteryTime for x86_64 (macOS 13+)…
-Built and verified: /Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/outputs/BatteryTime.app
-/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/outputs/BatteryTime.app/Contents/MacOS/BatteryTime: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]
-/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/outputs/BatteryTime.app/Contents/MacOS/BatteryTime (for architecture x86_64):	Mach-O 64-bit executable x86_64
-/Users/madsiversen/Documents/Codex/2026-10-25/files-mentioned-by-the-user-batterytime/outputs/BatteryTime.app/Contents/MacOS/BatteryTime (for architecture arm64):	Mach-O 64-bit executable arm64

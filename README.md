@@ -1,4 +1,4 @@
-# BatteryTime 4.0
+# BatteryTime 4.1
 
 A native, local-only battery dashboard and menu bar app for macOS 13 or later. Built with SwiftUI, AppKit, Swift Charts, and public IOKit APIs. Supports Apple Silicon and Intel Macs.
 
@@ -23,7 +23,9 @@ You need a Mac with Swift 6 tools (Xcode 16 or later, or compatible Apple Comman
    ./build.sh
    ```
 
-The script compiles both `arm64` and `x86_64`, creates `build/BatteryTime.app`, validates its plist, executable architectures, icon and local signature, and opens it. An existing app is replaced only after the new bundle passes validation. Compilation failures preserve the existing app and remove temporary incomplete bundles. The full error log is `.build/build.log`.
+The script compiles both `arm64` and `x86_64`, creates `build/BatteryTime.app`, validates metadata, Mach-O executable types, architectures, macOS deployment targets, icon, permissions, and every architecture's code signature, and runs the native executable's diagnostics before opening the app. A destination lock prevents overlapping builds. Existing apps are preserved until validation succeeds, and failed publication restores the previous bundle. Source, build, and signature resources receive normal readable/executable permissions even under a restrictive umask. The full error log is `.build/build.log`.
+
+`BATTERYTIME_BUILD_CACHE=/absolute/writable/path` optionally places all compiler/test intermediates outside the source folder. No developer cache is included in the delivered archive.
 
 Options:
 
@@ -60,11 +62,14 @@ Launch at login uses `SMAppService.mainApp`. It is off unless you enable it. The
 
 Battery percentage by itself is never treated as a time estimate. While discharging, BatteryTime keeps up to 30 minutes of contiguous samples. A measured rate requires at least five minutes of observations, four samples, and two percentage points of actual drain, to limit noise from rounded percentages.
 
-Least-squares discharge slopes from the last 10 and 30 minutes are combined, favoring recent activity. A time-based exponential filter smooths changes with a two-minute time constant, so changing the refresh interval doesn't change the smoothing behavior. The remaining charge is divided by that measured rate. A valid, per-battery macOS time-to-empty reading (minutes converted to seconds), or the system time API (seconds), supplies an initial signal. When the system and observed estimates broadly agree, they are blended with 80% weight on observed use. Grossly contradictory system estimates are excluded after learning.
+Least-squares discharge slopes from the last 8 and 30 minutes are combined, favoring recent activity more strongly when consumption changes. After initial learning, a recent slope can use a smaller observed drop so a change to light usage doesn't have to wait for another two points of drain. Observations are spaced by at least 15 seconds so rapid events or repeated Refresh clicks don't bias the regression. A two-minute time-based exponential filter smooths measured rates consistently at all refresh intervals. The current charge is divided by that rate.
 
-The estimator resets on external power, a battery identity change, a significant upward capacity correction, Low Power Mode changes, sleep/wake, missing data, and long sampling gaps. Saved history is kept for charts; a new process starts fresh learning rather than assuming the Mac's activity while BatteryTime was closed. Stale measured rates expire when sustained discharge cannot be observed. Unknown, zero, negative, nonfinite, and implausibly long time signals are rejected. With insufficient signals, the app displays **Calculating…**.
+A valid per-battery macOS time-to-empty reading (minutes converted to seconds), or the global time API (seconds) if needed, supplies an initial signal. System estimates are also filtered in consumption-rate space, preventing an immediate jump from four hours to 24 hours when the system signal changes. When system and observed estimates broadly agree they are blended with 80% weight on observed use; grossly contradictory system signals are excluded after learning.
 
-Time is explicitly an estimate. Workload, temperature, battery aging, and macOS shutdown reserves affect real runtime; the empty time is not a promise. The visible countdown updates every minute, and the underlying measurement refresh defaults to 30 seconds. Power-source notifications trigger an immediate refresh as well.
+A long plateau in a rounded percentage limits the rate that can reasonably be inferred; it does not establish zero consumption. After ten minutes without measurable drain the old observed rate expires. The app then uses a current system signal or displays Calculating… until new evidence is available. CPU/GPU workload changes are detected through battery drain and the system signal, without extra CPU/GPU polling.
+The estimator resets on external power, a battery identity change, a significant upward capacity correction, Low Power Mode changes, sleep/wake, missing data, and long sampling gaps. Saved history is kept for charts; a new process starts fresh learning rather than assuming the Mac's activity while BatteryTime was closed. Nonmonotonic timestamps begin a new learning session rather than reusing an estimate dated in the future. Unknown, zero, negative, nonfinite, and implausibly long time signals are rejected. With insufficient signals, the app displays **Calculating…**.
+
+Time is explicitly an estimate. Workload, temperature, battery aging, and macOS shutdown reserves affect real runtime; the empty time is not a promise. The visible countdown updates every minute, and the underlying measurement refresh defaults to 30 seconds. The first power-source notification refreshes immediately; chatter within two seconds is combined into one trailing read. A refresh arriving during an in-flight read is retained, and superseded results are discarded. Canceled reads cannot repopulate a cleared session or resurrect pre-sleep/pre-mode-change estimates.
 
 ## Data, API scope, and performance
 
@@ -72,22 +77,28 @@ BatteryTime does not use a server, analytics, shell battery queries, private SMC
 
 macOS often reports current/max capacity in percentage units. These values are never labeled mAh or compared with a physical design capacity. The app shows a capacity ratio only when macOS supplies consistent physical-capacity-scale values; it labels the units as reported. It does not fabricate a health percentage when this information is missing. Cycle count is read from the documented registry key if available.
 
-History lives at `~/Library/Application Support/BatteryTime/history.json`, capped at 24 hours and 3,000 samples. Writes are atomic, occur at most once per minute during monitoring, and are serialized off the main actor. The final write is awaited when quitting. Settings are stored in the app's UserDefaults domain, `dk.batterytime.menubar`. No battery serial number is read or stored. The transient registry identity helps detect hardware changes and is not a personal identifier.
+History lives at `~/Library/Application Support/BatteryTime/history.json`, capped at 24 hours and 3,000 samples. Loading and writes run off the main actor. Normal dirty-history writes occur at most once per minute; explicit clearing, sleep, and final shutdown can flush immediately. Writes are atomic and ordered by revisions, so clock changes cannot suppress a newer write. The final write is awaited when quitting. New samples use an incremental bounded append instead of sorting the full history on every refresh. Charts retain all stored history while drawing at most 240 actual first/last/extreme observations per chart; hover values continue to use the full selected history. Settings are stored in the app's UserDefaults domain, `dk.batterytime.menubar`. No battery serial number is read or stored. The transient registry identity helps detect hardware changes and is not a personal identifier.
 
-One tolerant sampling timer runs while awake, and it is invalidated during sleep and shutdown. IOKit reads run at utility priority outside the main actor. Visible charts/countdowns use a minute timeline; the dashboard and popover do not add battery polling timers. History and estimator storage are bounded.
+One tolerant sampling timer runs while awake, and it is invalidated during sleep and shutdown. IOKit reads run at utility priority outside the main actor. Visible charts/countdowns use a minute timeline; the dashboard and popover do not add battery polling timers. Closed windows release their SwiftUI hosting trees. Status symbols are cached, unchanged status presentations are skipped, and notification-settings queries are deduplicated. Notification callbacks are explicitly delivered on the main queue before accessing actor-isolated state. History and estimator storage are bounded.
 
 ## Tests and diagnostics
 
 ```sh
 ./scripts/test.sh
-./build/BatteryTime.app/Contents/MacOS/BatteryTime --diagnostics
+./scripts/test-build.sh ../BatteryTime.app       # packaged app alongside Source/
+./scripts/validate-bundle.sh ../BatteryTime.app arm64 x86_64
+../BatteryTime.app/Contents/MacOS/BatteryTime --diagnostics
 ```
 
-`test.sh` runs the same core regression assertions through a Foundation-only runner, so Command Line Tools installations without XCTest can still execute them. `Package.swift` exposes the suite to XCTest in full Xcode. The tests cover observed/system/blended estimates, rounded capacities, workload changes, invalid values, power changes, sleep/gaps, battery replacement, low-power transitions, countdowns, notification thresholds, and bounded persistent history.
+After building to the default folder, substitute `./build/BatteryTime.app` for `../BatteryTime.app`.
 
-Diagnostics print a single real IOKit snapshot as JSON and exit without launching the GUI or writing history. Missing fields are omitted. `--background` launches the normal menu bar app without showing the startup dashboard.
+`test.sh` discovers every core regression method from the shared XCTest source and executes it through a Foundation-only runner; it also compiles and runs native IOKit decoding, menu presentation, actor/lifecycle, persistence, event, and permission-race scenarios. Tests use private temporary history and dedicated preference suites and do not change the user's battery history or notification/login preferences. Full Xcode can also run the core XCTest suite through `Package.swift`; the app's Xcode scheme remains a build/run scheme.
 
-See `TESTING.md` for the actual verification performed on the delivered build and remaining hardware/environment limitations. See `CHANGELOG.md` for the original-code audit and completed changes.
+`test-build.sh` checks the real bundle, then confines destructive corruption and rollback tests to a private temporary directory. Small **actually compiled** Swift fixtures exercise packaging failures without repeatedly rebuilding the entire GUI. It tests missing/corrupted executables, metadata, signature tampering, permissions, real compiler failures, build locking, publication rollback, and restrictive umasks. These packaging fixtures are never delivered as the application.
+
+Diagnostics print one real IOKit snapshot as JSON and exit without starting the GUI, registering login/notification settings, or writing history. Missing fields are omitted. `--background` starts the menu bar app without showing the startup dashboard.
+
+See `TESTING.md` for actual test counts, runtime checks, exact environment limits, and signing assessment. `REVIEW.md` records the bugs fixed, performance changes, and the investigation into “damaged or incomplete” launch errors. `CHANGELOG.md` summarizes this release.
 
 ## Icon source
 
